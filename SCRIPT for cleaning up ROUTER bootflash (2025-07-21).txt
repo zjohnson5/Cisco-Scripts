@@ -1,0 +1,124 @@
+!! SCRIPT for cleaning up ROUTER bootflash: directory !!
+
+
+! STEP 1: Erase configuration
+write erase
+! Confirm when prompted
+config-register 0x2142  ! in config mode to change the boot config
+reload
+! ** DO NOT SAVE CONFIG when prompted at reload... when saving the factory config
+write memory            ! saves the factory default running-config to the startup-config
+config-register 0x2102  ! in config mode to go back to default setting
+reload
+
+! STEP 2: Clear Boot Settings & Stop Logging
+no boot system          ! ** be careful with this command on older systems as it makes it not boot!!
+no logging buffered
+no exception crashinfo
+
+! STEP 3: Delete crash data, trace logs, and licenses
+delete /force /recursive bootflash:/core
+delete /force bootflash:/core.*
+delete /force /recursive bootflash:/tracelogs
+delete /force bootflash:/mode_event_log
+delete /force /recursive bootflash:/license_evlog
+delete /force bootflash:/*.log
+delete /force bootflash:/*.txt
+delete /force bootflash:/*.gz
+
+! STEP 4: Delete optional/legacy directories & files
+delete /force /recursive bootflash:/onep
+delete /force /recursive bootflash:/pnp-info
+delete /force /recursive bootflash:/pnp-tech
+delete /force /recursive bootflash:/pnp-tech-discovery-summary
+delete /force /recursive bootflash:/pnp-tech-time
+delete /force /recursive bootflash:/topnmemuse
+delete /force /recursive bootflash:/virtual-instance
+delete /force /recursive bootflash:/gs_script
+delete /force /recursive bootflash:/.dbpersist
+delete /force /recursive bootflash:/.prst_sync
+delete /force /recursive bootflash:/.rollback_timer
+delete /force /recursive bootflash:/iox_host_data_share
+delete /force /recursive bootflash:/.iox_dir_list
+delete /force /recursive bootflash:/guest-share
+delete /force /recursive bootflash:/throughput_monitor_params
+delete /force /recursive bootflash:/ccpexpress
+delete /force /recursive bootflash:/conf-arch
+delete /force /recursive bootflash:/its
+delete /force /recursive bootflash:/OLD-Files
+delete /force /recursive bootflash:/NEW-Files
+delete /force /recursive bootflash:/*_V11files
+delete /force /recursive bootflash:/ccpexp
+delete /force /recursive bootflash:/SHARED-IOX
+delete /force /recursive bootflash:/.installer/rollback*
+delete /force bootflash:/.installer/last_pkgconf_shasum
+delete /force bootflash:/.installer/install_global_trans_lock
+delete /force bootflash:/.installer/watchlist
+delete /force bootflash:/crashinfo_RP_*
+delete /force bootflash:/Old-conf
+delete /force bootflash:/ingress.pcap
+
+! STEP 5: Delete scripts, audio files, memleak tool
+delete /force /recursive bootflash:*.au
+delete /force /recursive bootflash:*.pcap
+delete /force /recursive bootflash:*.raw
+delete /force /recursive bootflash:*.tcl
+delete /force /recursive bootflash:*.vxml
+delete /force /recursive bootflash:*.wav
+delete /force /recursive bootflash:*.xml
+
+delete /force bootflash:/youdialed911_new.tcl
+delete /force bootflash:/youdialed911.tcl
+delete /force bootflash:/youdialed911-old.au
+delete /force bootflash:/youdialed911.au
+delete /force bootflash:/memleak.tcl
+delete /force bootflash:/TACCAPTURE.pcapco
+delete /force bootflash:/test.tar
+delete /force bootflash:/isr4400.tar
+delete /force bootflash:/collated_log_2*
+delete /force bootflash:/ACK_all_rum.txt
+delete /force bootflash:/all_rum.txt
+delete /force bootflash:/TAC-MSFT-interface*.pcap
+delete /force bootflash:/TAC-CUCM-interface*.pcap
+delete /force bootflash:/apps42.9-2-1TH1-13.sbn       ! ** WARNING **  .sbn files are for secure boot and removing them may prevent booting the device next time. 
+                                                      !                 Only remove if you are confident that the device will not be reused again in the future.
+delete /force bootflash:/cnu42.9-2-1TH1-13.sbn
+delete /force bootflash:/cpconfig-29xx.cfg
+delete /force bootflash:/cvm42sccp.9-2-1TH1-13.sbn
+delete /force bootflash:/dsp42.9-2-1TH1-13.sbn
+delete /force bootflash:/home.shtml
+delete /force bootflash:/home.tar
+delete /force bootflash:/SCCP42.9-2-1S.loads
+delete /force bootflash:/term42.default.loads
+delete /force bootflash:/term62.default.loads
+
+! STEP 6: Remove certificates and license artifacts
+delete /force bootflash:/ios_core.p7b
+delete /force bootflash:/trustidrootx3_ca.ca
+delete /force bootflash:/trustidrootx3_ca_*.ca
+delete /force bootflash:/private-KS1
+license smart deregister
+license smart factory reset
+
+! STEP 7: (OPTIONAL) Clear crypto keys if you are repurposing the router
+clear crypto key mypubkey rsa
+license clear
+
+! STEP 8: Delete unused or legacy IOS images and updates 
+!   ** (BE CAREFUL TO NOT DELETE ACTIVE IOS) **
+install remove inactive
+delete /force bootflash:/isr4400_cpld_update_v1.1_SPA.bin
+
+! STEP 9: (OPTIONAL) ONLY delete other files as needed
+! ** Be careful you don't delete things from the wrong directory!
+! ** Sometimes it doesn't know what it's supposed to look at...
+dir crashinfo:
+delete crashinfo:/crashinfo*
+dir nvram:
+delete nvram:*.log
+dir usb0:
+
+! STEP 10. Reload device WITHOUT saving running config
+reload
+! When prompted to "save [yes/no]:"
+! Type "no"

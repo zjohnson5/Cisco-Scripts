@@ -1,0 +1,81 @@
+! Cisco Network-Device Wiping Template (2025-07-21)
+
+! Consolidated from previous notes using ChatGPT
+
+! STEP 0: Check and Backup the Configs (Optional)
+# show running-config
+# show startup-config
+# copy running-config tftp:         !<< optional backup 
+# copy startup-config tftp:         !<< optional backup
+# copy startup-config usb0:         !<< optional backup to Local USB if available
+# show interfaces status
+# show interfaces description
+# show inventory
+# show license all
+# show version
+# dir bootflash:
+# show bootflash:
+
+! STEP 1: Reset VLANs and Interfaces
+# show vlan brief                               !<< Confirm all VLANs before deleting
+# delete flash:vlan.dat
+# delete bootflash:vlan.dat                     !<< in case it's not in the flash storage
+# delete nvram:vlan.dat                         !<< in case it's not in the bootflash storage either
+(config)# default interface range Gi0/1 - 48    !<< or all relevant interfaces
+(config)# default interface vlan 1              !<< reset SVIs too if used
+
+! STEP 2: Erase Configuration
+# write erase				        !<< or use: # erase startup-config
+# reload				            !<< Device will reboot, confirm if needed
+    ! Another way to do this is with changing the boot file to an empty one, reloading, writing running-config to startup-config, reloading again
+(config)# config-register 0x2102    !<< this is the default (check using '#show version')
+(config)# config-register 0x2142    !<< this is the empty file
+# reload
+(config)# config-register 0x2102    !<< return to this after wiping the config
+# reload                            !<< reload again to confirm config is wiped
+! On newer devices you can use:
+# factory-reset all                 !<< for newer devices like the Cisco 9000 series
+!   ** Be careful with factory-reset as it will wipe a lot of things, not just the configs
+
+! STEP 3: Clear Boot Settings & Stop Logging
+(config)# no boot system            !<< Clears the boot file variables
+(config)# no logging buffered       !<< Stops logging to memory  (does not delete existing logs)
+(config)# no exception crashinfo    !<< Stops future crash dumps (does not delete existing crash info)
+
+! STEP 4: Remove Licensing (for Smart Licensing platforms)
+# show license summary
+# show license status
+# license smart deregister          !<< Removes from Cisco Smart Account
+# license smart factory reset       !<< Resets license settings to default
+
+! STEP 5: Remove Inactive IOS files
+# install remove inactive
+!   ** Be sure not to delete your active IOS image (check with 'show version' -> System image file)
+
+! STEP 6: Manual Bootflash Cleanup (Optional but thorough)
+!   ** SEE SCRIPT FOR SAFE REMOVAL OF CONTENTS
+# dir bootflash:
+# show bootflash: | include vlan
+# delete /force /recursive bootflash:/*            !<< removes all files recursively
+!   ** DO NOT use this unless you want to brick the device! This will remove the active IOS.
+# delete /recursive bootflash:/<filename>          !<< use this to approve removal of specific files
+# rmdir bootflash:/<directory>                     !<< Clean up remaining directories
+# format bootflash:
+!	** Be Careful with formatting! Only use if loading a new IOS or disposing the device
+# reload                                           !<< After formatting - if not done automatically
+
+! STEP 7: Delete any other remaining files as needed
+# dir crashinfo:
+# delete crashinfo:/crashinfo*
+# dir nvram:
+# delete nvram:*.log
+# dir usb0:
+
+! STEP 8: Final reload to check wiped config
+# reload
+# show startup-config               !<< Should return nothing or very minimal
+# show vlan brief                   !<< Should show default VLAN 1 only
+# show version                      !<< Confirm boot image
+# show license status               !<< Confirm license reset (if Smart Licensing)
+# show bootflash:                   !<< Confirm files are removed
+

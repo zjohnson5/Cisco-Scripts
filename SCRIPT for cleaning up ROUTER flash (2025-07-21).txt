@@ -1,0 +1,123 @@
+!! SCRIPT for cleaning up ROUTER flash: directory !!
+
+
+! STEP 1: Clear Boot Settings & Stop Logging
+! IN CONFIG MODE
+no boot system
+no logging buffered
+no exception crashinfo
+no license boot level
+no service call-home
+no call-home
+config-register 0x2142
+exit
+
+----------------------
+
+! STEP 2: Erase configuration
+! IN ENABLE MODE
+! Check the version and boot file
+show version | begin Mode
+! Remove configs
+write erase
+!   ** DO NOT SAVE CONFIG when prompted at reload **
+
+! STEP 3: Delete crash data, trace logs, and licenses
+delete /force /recursive flash:/core
+delete /force flash:/core.*
+delete /force /recursive flash:/tracelogs
+delete /force flash:/mode_event_log
+delete /force /recursive flash:/license_evlog
+delete /force flash:/*.cfg
+delete /force flash:/*.log
+delete /force flash:/*.txt
+delete /force flash:/*.gz
+
+! STEP 4: Delete optional/legacy directories & files
+delete /force /recursive flash:/onep
+delete /force /recursive flash:/pnp-info
+delete /force /recursive flash:/pnp-tech
+delete /force /recursive flash:/pnp-tech-discovery-summary
+delete /force /recursive flash:/pnp-tech-time
+delete /force /recursive flash:/topnmemuse
+delete /force /recursive flash:/virtual-instance
+delete /force /recursive flash:/gs_script
+delete /force /recursive flash:/.dbpersist
+delete /force /recursive flash:/.prst_sync
+delete /force /recursive flash:/.rollback_timer
+delete /force /recursive flash:/iox_host_data_share
+delete /force /recursive flash:/.iox_dir_list
+delete /force /recursive flash:/guest-share
+delete /force /recursive flash:/throughput_monitor_params
+delete /force /recursive flash:/ccpexpress
+delete /force /recursive flash:/conf-arch
+delete /force /recursive flash:/its
+delete /force /recursive flash:/SHARED-IOX
+delete /force /recursive flash:/.installer/rollback*
+delete /force flash:/.installer/last_pkgconf_shasum
+delete /force flash:/.installer/install_global_trans_lock
+delete /force flash:/.installer/watchlist
+delete /force flash:/crashinfo_RP_00*
+
+! STEP 5: Delete scripts, audio files, memleak tool
+delete /force /recursive flash:*.au
+delete /force /recurisve flash:*.pcap
+delete /force /recursive flash:*.raw
+delete /force /recursive flash:*.tcl
+delete /force /recursive flash:*.vxml
+delete /force /recursive flash:*.wav
+delete /force /recursive flash:*.xml
+
+delete /force flash:/youdialed911_new.tcl
+delete /force flash:/youdialed911.tcl
+delete /force flash:/youdialed911-old.au
+delete /force flash:/youdialed911.au
+delete /force flash:/memleak.tcl
+delete /force flash:/TACCAPTURE.pcapco
+delete /force flash:/test.tar
+delete /force flash:/isr4400.tar
+delete /force flash:/ACK_all_rum.txt
+delete /force flash:/all_rum.txt
+delete /force flash:/TAC-MSFT-interface*.pcap
+delete /force flash:/TAC-CUCM-interface*.pcap
+delete /force flash:/apps42.9-2-1TH1-13.sbn
+delete /force flash:/cnu42.9-2-1TH1-13.sbn
+delete /force flash:/cpconfig-29xx.cfg
+delete /force flash:/cvm42sccp.9-2-1TH1-13.sbn
+delete /force flash:/dsp42.9-2-1TH1-13.sbn
+delete /force flash:/home.shtml
+delete /force flash:/home.tar
+delete /force flash:/SCCP42.9-2-1S.loads
+delete /force flash:/term42.default.loads
+delete /force flash:/term62.default.loads
+
+! STEP 6: Remove certificates and license artifacts
+delete /force flash:/ios_core.p7b
+delete /force flash:/trustidrootx3_ca.ca
+delete /force flash:/trustidrootx3_ca_*.ca
+delete /force flash:/private-KS1
+license smart deregister
+license smart factory reset
+
+! STEP 7: (OPTIONAL/Doesn't work usually) Clear crypto keys if you are repurposing the router
+clear crypto key mypubkey rsa
+license clear
+
+! STEP 8: Delete unused or legacy IOS images and update files 
+!   **   (BE CAREFUL!! DO NOT DELETE ACTIVE IOS)  **
+install remove inactive
+delete /force bootflash:/isr4400_cpld_update_v1.1_SPA.bin
+
+! STEP 9: (OPTIONAL) ONLY delete other files AS NEEDED
+! ** Be careful you don't delete things in the wrong directory. 
+! ** Sometimes it doesn't know what it's supposed to look at!
+dir crashinfo:
+delete crashinfo:/crashinfo*
+dir nvram:
+delete nvram:*.log
+dir usb0:
+
+! STEP 10. Reload device WITHOUT saving running config
+reload
+! When prompted to "save [yes/no]:"
+! Type "no"

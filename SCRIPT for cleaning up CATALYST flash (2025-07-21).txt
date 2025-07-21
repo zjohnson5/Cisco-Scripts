@@ -1,0 +1,121 @@
+! SCRIPT for cleaning up CATALYST flash (2025-07-21)
+
+! IN CONFIG MODE
+no boot system
+no exception crashinfo
+no license boot level
+no logging buffered
+no service call-home
+no call-home
+config-register 0x2142
+exit
+
+----------------------
+
+! IN ENABLE MODE
+! Check the version and boot file
+show version | begin Mode
+! Remove configs
+write erase
+
+! Delete logs and configs
+delete /force /recursive flash:/core
+delete /force /recursive flash:/tracelogs
+delete /force /recursive flash:/license_evlog
+delete /force flash:/bootloader_evt_handle.log
+delete /force flash:/boothelper.log
+delete /force flash:/boothelper.old
+delete /force flash:/config.text
+delete /force flash:/coredumpinfo/coredump.cfg
+delete /force flash:/coredumpinfo
+delete /force flash:/cpconfig-39xx.cfg
+delete /force flash:/crypto_archive
+delete /force flash:/.installer/install_add_oper.log
+delete /force flash:/log/lina_monitor.log
+delete /force flash:/log/asa-cmd-server.log
+delete /force flash:/log
+delete /force flash:/mode_event_log
+delete /force flash:/Old-conf
+delete /force flash:/.packages.verify.log
+delete /force flash:/vlan.dat
+delete /force flash:/stby-vlan.dat
+
+! Delete unused files and directories
+delete /force /recursive flash:/onep
+delete /force /recursive flash:/pnp-info
+delete /force /recursive flash:/pnp-tech
+delete /force /recursive flash:/pnp-tech-discovery-summary
+delete /force /recursive flash:/pnp-tech-time
+delete /force /recursive flash:/topnmemuse
+delete /force /recursive flash:/virtual-instance
+delete /force /recursive flash:/gs_script
+delete /force /recursive flash:/.dbpersist
+delete /force /recursive flash:/.prst_sync
+delete /force /recursive flash:/.rollback_timer
+delete /force /recursive flash:/iox_host_data_share
+delete /force /recursive flash:/.iox_dir_list
+delete /force /recursive flash:/guest-share
+delete /force /recursive flash:/throughput_monitor_params
+delete /force /recursive flash:/ccpexpress
+delete /force /recursive flash:/ccpexp
+delete /force /recursive flash:/conf-arch
+delete /force /recursive flash:/its
+delete /force /recursive flash:/mnt
+delete /force /recursive flash:/SHARED-IOX
+delete /force /recursive flash:/dc_profile_dir
+delete /force /recursive flash:/tech_support
+delete /force /recursive flash:/.installer/rollback
+delete /force /recursive flash:/OLD-Files
+delete /force /recursive flash:/NEW-Files
+delete /force /recursive flash:/*_V11files
+delete /force flash:/.installer/issu_crash
+delete /force flash:/.installer/last_pkgconf_shasum
+delete /force flash:/.installer/install_global_trans_lock
+delete /force flash:/.installer/watchlist
+delete /force flash:/crashinfo_RP_00_*
+delete /force flash:/express_setup.debug
+delete /force flash:/nvram_config_bkup
+delete /force flash:/home.shtml
+delete /force flash:/memleak.tcl
+delete /force flash:/OLD-conf
+delete /force flash:/rdope_out.txt
+delete /force flash:/rdope.log
+delete /force flash:/vman_fdb
+delete /force flash:/vpnclient
+
+license smart deregister
+license smart factory reset
+license smart clear eventlog
+license clear
+clear crypto key mypubkey rsa
+delete /force flash:/private-KS1
+
+! Delete redundancies
+install remove inactive
+delete /force flash:/c1900-universalk9-mz.SPA.154-3.M4.bin
+delete /force flash:/cat3k_caa-webui.16.12.05b.SPA.pkg
+delete /force flash:/cat3k_caa-guestshell.16.12.05b.SPA.pkg
+
+reload
+
+---------------------
+
+! IN CONFIG MODE (again)
+config-register 0x2102  ! Reset back to default
+config-register 0x1     ! Depending on the version of device
+
+--------------------
+
+! Last resort if other steps aren't enough !
+factory-reset all
+!  The factory reset operation is irreversible for all operations. Are you sure? [confirm]
+!  The following will be deleted as a part of factory reset:
+!  1: Crash info and logs
+!  2: User data, startup and running configuration
+!  3: All IOS images, including the current boot image
+!  4: OBFL logs
+!  5: User added rommon variables
+!  6: Data on Field Replaceable Units(USB/SSD/SATA)
+!  The system will reload to perform factory reset.
+!  It will take some time to complete and bring it to rommon.
+!  You will need to load IOS image using USB/TFTP from rommon after this operation is completed.

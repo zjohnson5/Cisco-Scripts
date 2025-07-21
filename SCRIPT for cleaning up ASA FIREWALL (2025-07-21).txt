@@ -1,0 +1,80 @@
+! SCRIPT for cleaning up ASA FIREWALL (2025-07-21)
+
+! This is for removing specific files off an old ASA Firewall
+! The spaces are necessary between the lines because these old devices do not register /force
+! The spaces are to speed through the confirmation process of each command
+
+
+delete flash:/asdm<insert-generation>.bin
+
+
+delete /recursive disk0:/crypto_archive
+
+
+delete /recursive disk0:/coredumpinfo
+
+
+delete flash:/ASA5525X_CS_running-config_<insert-config-file>.txt
+
+
+! ** DON'T GO PAST HERE until the previous ones have been confirmed **
+
+
+delete flash:/oldconfig_*.cfg
+
+
+delete flash:/asasfr-5500x-boot-5.3.1-152.img
+
+
+
+delete flash:/asa9-10-1-16-smp-k8.bin
+
+
+delete flash:/asa9-10-1-17-smp-k8.bin
+
+
+delete flash:/asa9-10-1-30-smp-k8.bin
+
+
+delete flash:/asa9-10-1-32-smp-k8.bin
+
+
+delete flash:/asa9-10-1-44-smp-k8.bin
+
+
+
+
+! === Delete old ASA firmware ===
+delete flash:/asa<insert-generation>-smp.k8.bin
+delete disk0:/asa<insert-generation>-smp.k8.bin
+
+
+! === Delete outdated ASDM versions ===
+delete disk0:/asdm-(insert-version>.bin
+
+
+! === Delete old AnyConnect packages ===
+delete disk0:/anyconnect-macosx-i386-2.5.2014-k9.pkg
+
+
+delete disk0:/anyconnect-linux-2.5.2014-k9.pkg
+
+
+
+! === Delete legacy Cisco Secure Desktop (CSD/SBL) files ===
+delete disk0:/csd_3.5.2008-k9.pkg
+
+
+delete /recursive disk0:/sdesktop
+
+
+
+! === Optional: Delete log directory (if not in use) ===
+ delete /recursive disk0:/log
+
+
+
+! === delete old folder
+delete /recursive disk0:/sdesktop
+
+
